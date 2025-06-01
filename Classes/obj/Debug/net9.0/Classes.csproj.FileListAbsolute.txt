@@ -1,0 +1,14 @@
+C:\Users\HP\Desktop\CSharp\Classes\bin\Debug\net9.0\Classes.exe
+C:\Users\HP\Desktop\CSharp\Classes\bin\Debug\net9.0\Classes.deps.json
+C:\Users\HP\Desktop\CSharp\Classes\bin\Debug\net9.0\Classes.runtimeconfig.json
+C:\Users\HP\Desktop\CSharp\Classes\bin\Debug\net9.0\Classes.dll
+C:\Users\HP\Desktop\CSharp\Classes\bin\Debug\net9.0\Classes.pdb
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.AssemblyInfoInputs.cache
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.AssemblyInfo.cs
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.csproj.CoreCompileInputs.cache
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.dll
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\refint\Classes.dll
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.pdb
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.genruntimeconfig.cache
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\ref\Classes.dll
