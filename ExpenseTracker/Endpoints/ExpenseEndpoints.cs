@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
+using ExpenseTracker.Models;
 
 namespace ExpenseTracker.Endpoints;
+
 
 public class ExpenseEndpoints
 {

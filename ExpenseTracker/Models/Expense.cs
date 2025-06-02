@@ -1,4 +1,5 @@
 using ExpenseTracker;
+namespace ExpenseTracker.Models;
 public class Expense
 {
     public Guid id { get; }
