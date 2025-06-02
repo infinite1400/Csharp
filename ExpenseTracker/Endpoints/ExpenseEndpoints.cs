@@ -14,7 +14,7 @@ public class ExpenseEndpoints
 
     public static IResult ListExpense(ExpenseManager manager)
     {
-        return Results.Ok(manager.ListExpenses());
+        return Results.Ok(new { Balance = manager.Balance, Expenses = manager.ListExpenses() });
     }
 
     public static IResult ExpenseById(string id, ExpenseManager manager)
@@ -60,6 +60,14 @@ public class ExpenseEndpoints
         {
             return Results.NotFound(new { message = "No Expense by this id" });
         }
-        return Results.Ok(manager.DeleteExpense(guid));
+        if (exp.type == 'C')
+        {
+            manager.Balance -= exp.amount;
+        }
+        else
+        {
+            manager.Balance += exp.amount;
+        }
+        return Results.Ok(new { message = "Deleted Expense", DeleteExpense = manager.DeleteExpense(guid), balance = manager.Balance });
     }
 }
