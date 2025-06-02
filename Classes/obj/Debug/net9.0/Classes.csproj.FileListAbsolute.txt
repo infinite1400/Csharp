@@ -12,3 +12,4 @@ C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\refint\Classes.dll
 C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.pdb
 C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.genruntimeconfig.cache
 C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\ref\Classes.dll
+C:\Users\HP\Desktop\CSharp\Classes\obj\Debug\net9.0\Classes.sourcelink.json

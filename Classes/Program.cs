@@ -2,7 +2,7 @@
 
 class Program
 {
-    static void Main()
+    public static void Main(string[] args)
     {
         // BankAccount account1 = new BankAccount("Murari", 1000);
         // Console.WriteLine($"Acount Holder Name is {account1.Owner} and Balance is {account1.Balance}");
