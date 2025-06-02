@@ -2,10 +2,10 @@ using ExpenseTracker;
 public class Expense
 {
     public Guid id { get; }
-    public decimal amount { get; }
-    public string note { get; }
-    public char type { get; }
-    public DateTime date { get; }
+    public decimal amount { get; set; }
+    public string note { get; set; }
+    public char type { get; set; }
+    public DateTime date { get; set; }
     public Expense(decimal amount, DateTime date, string note, char type)
     {
         this.id = Guid.NewGuid();

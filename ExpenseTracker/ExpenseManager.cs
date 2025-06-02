@@ -31,6 +31,50 @@ public class ExpenseManager
         }
         return null;
     }
+
+    public Expense EditExpense(Guid id, decimal amount, string note, char type)
+    {
+        int Size = Expenses.Count;
+        int idx = -1;
+        for (int i = 0; i < Size; i++)
+        {
+            if (Expenses[i].id == id)
+            {
+                idx = i; break;
+            }
+        }
+        if (type == Expenses[idx].type)
+        {
+            if (type == 'D')
+            {
+                // for debit (plus previous debit amount and minus current update
+                // amount )
+                Balance += Expenses[idx].amount - amount;
+            }
+            else
+            {
+                // for credit (minus previous credit amount and add current update
+                // amount )
+                Balance += -Expenses[idx].amount + amount;
+            }
+        }
+        else
+        {
+            if (Expenses[idx].type == 'D' && type == 'C')
+            {
+                Balance += Expenses[idx].amount + amount;
+            }
+            else
+            {
+                Balance += -Expenses[idx].amount - amount;
+            }
+        }
+        Expenses[idx].amount = amount;
+        Expenses[idx].note = note;
+        Expenses[idx].type = type;
+        Expenses[idx].date = DateTime.Now;
+        return Expenses[idx];
+    }
     public List<Expense> ListExpenses()
     {
         return Expenses;

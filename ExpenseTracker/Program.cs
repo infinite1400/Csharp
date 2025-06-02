@@ -49,6 +49,22 @@ app.MapGet("/expense/{id}", (string id) =>
     }
 });
 
+app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request) =>
+{
+    if (Guid.TryParse(id, out var guid) == false)
+    {
+        return Results.BadRequest(new { message = "Invalid Guid Format" });
+    }
+    var exp = expenseManager.FindExpenseById(guid);
+    if (exp == null)
+    {
+        return Results.NotFound(new { message = "No Expense by this id" });
+    }
+    var editExpense = expenseManager.EditExpense(guid, request.Amount, request.Note, request.Type);
+    return Results.Ok(new { message = "Updated Expense", editExpense ,balance=expenseManager.Balance});
+
+});
+
 app.Run();
 
 public record AddExpenseRequest(string Note, decimal Amount, char Type);
