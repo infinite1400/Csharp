@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using ExpenseTracker.Models;
 using ExpenseTracker.Services;
+using ExpenseTracker.Dto;
 namespace ExpenseTracker.Endpoints;
 
 
@@ -32,7 +33,7 @@ public class ExpenseEndpoints
         }
         else
         {
-            return Results.Ok(exp);
+            return Results.Ok(ExpenseDto.ToDto(exp));
         }
     }
 
@@ -76,12 +77,22 @@ public class ExpenseEndpoints
     public static IResult CreditExpenses(ExpenseManager manager)
     {
         var (balance, creditList) = manager.CreditOnly();
-        return Results.Ok(new { balance = balance, Credits = creditList });
+        List<ExpenseDto> creditDto = new List<ExpenseDto>();
+        foreach (var exp in creditList)
+        {
+            creditDto.Add(ExpenseDto.ToDto(exp));
+        }
+        return Results.Ok(new { balance = balance, Credits = creditDto });
     }
 
     public static IResult DebitExpenses(ExpenseManager manager)
     {
         var (balance, debitList) = manager.DebitOnly();
-        return Results.Ok(new { balance = balance, Debits = debitList });
+        List<ExpenseDto> debitDto = new List<ExpenseDto>();
+        foreach (var exp in debitList)
+        {
+            debitDto.Add(ExpenseDto.ToDto(exp));
+        }
+        return Results.Ok(new { balance = balance, Debits = debitDto });
     }
 }
