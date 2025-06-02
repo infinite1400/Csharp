@@ -1,5 +1,5 @@
 using ExpenseTracker;
-
+using ExpenseTracker.Endpoints;
 ExpenseManager expenseManager = new ExpenseManager();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,62 +21,27 @@ app.UseHttpsRedirection();
 
 app.MapPost("/Addexpense", (AddExpenseRequest request) =>
 {
-    expenseManager.AddExpense(request.Amount, request.Note, request.Type);
-    Console.WriteLine(request.ToString());
-    Console.WriteLine(expenseManager.ListExpenses());
-    return Results.Ok(new { message = "Expense added", balance = expenseManager.Balance });
+    return ExpenseEndpoints.AddExpenseMethod(request, expenseManager);
 });
 
 app.MapGet("/ListExpense", () =>
 {
-    return Results.Ok(expenseManager.ListExpenses());
+    return ExpenseEndpoints.ListExpense(expenseManager);
 });
 
 app.MapGet("/expense/{id}", (string id) =>
 {
-    if (Guid.TryParse(id, out var guid) == false)
-    {
-        return Results.BadRequest(new { message = "Invalid Guid Format" });
-    }
-    var exp = expenseManager.FindExpenseById(guid);
-    if (exp == null)
-    {
-        return Results.NotFound(new { message = "No Expense by this id" });
-    }
-    else
-    {
-        return Results.Ok(exp);
-    }
+    return ExpenseEndpoints.ExpenseById(id, expenseManager);
 });
 
 app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request) =>
 {
-    if (Guid.TryParse(id, out var guid) == false)
-    {
-        return Results.BadRequest(new { message = "Invalid Guid Format" });
-    }
-    var exp = expenseManager.FindExpenseById(guid);
-    if (exp == null)
-    {
-        return Results.NotFound(new { message = "No Expense by this id" });
-    }
-    var editExpense = expenseManager.EditExpense(guid, request.Amount, request.Note, request.Type);
-    return Results.Ok(new { message = "Updated Expense", editExpense, balance = expenseManager.Balance });
-
+    return ExpenseEndpoints.EditExpenseById(id, request, expenseManager);
 });
 
 app.MapDelete("/deleteExpense/{id}", (string id) =>
 {
-    if (Guid.TryParse(id, out var guid) == false)
-    {
-        return Results.BadRequest(new { message = "Invalid Guid Format" });
-    }
-    var exp = expenseManager.FindExpenseById(guid);
-    if (exp == null)
-    {
-        return Results.NotFound(new { message = "No Expense by this id" });
-    }
-    return Results.Ok(expenseManager.DeleteExpense(guid));
+    return ExpenseEndpoints.DeleteExpenseById(id, expenseManager);
 });
 
 app.Run();
