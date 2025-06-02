@@ -75,6 +75,21 @@ public class ExpenseManager
         Expenses[idx].date = DateTime.Now;
         return Expenses[idx];
     }
+    public Expense DeleteExpense(Guid id)
+    {
+        int Size = Expenses.Count;
+        int idx = -1;
+        for (int i = 0; i < Size; i++)
+        {
+            if (Expenses[i].id == id)
+            {
+                idx = i; break;
+            }
+        }
+        var exp = Expenses[idx];
+        Expenses.Remove(exp);
+        return exp;
+    }
     public List<Expense> ListExpenses()
     {
         return Expenses;
