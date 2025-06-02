@@ -3,6 +3,7 @@ using System.Text;
 using ExpenseTracker.Models;
 
 namespace ExpenseTracker.Services;
+
 public class ExpenseManager
 {
     private List<Expense> _allExpenses = new List<Expense>();
@@ -95,4 +96,35 @@ public class ExpenseManager
     {
         return _allExpenses;
     }
+
+    public (decimal, List<Expense>) CreditOnly()
+    {
+        decimal bal = 0;
+        List<Expense> CreditList = new List<Expense>();
+        foreach (Expense exp in _allExpenses)
+        {
+            if (exp.type == 'C')
+            {
+                CreditList.Add(exp);
+                bal += exp.amount;
+            }
+        }
+        return (bal, CreditList);
+    }
+
+    public (decimal, List<Expense>) DebitOnly()
+    {
+        decimal bal = 0;
+        List<Expense> DebitList = new List<Expense>();
+        foreach (Expense exp in _allExpenses)
+        {
+            if (exp.type == 'D')
+            {
+                DebitList.Add(exp);
+                bal -= exp.amount;
+            }
+        }
+        return (bal, DebitList);
+    }
+
 }

@@ -72,4 +72,16 @@ public class ExpenseEndpoints
         }
         return Results.Ok(new { message = "Deleted Expense", DeleteExpense = manager.DeleteExpense(guid), balance = manager.Balance });
     }
+
+    public static IResult CreditExpenses(ExpenseManager manager)
+    {
+        var (balance, creditList) = manager.CreditOnly();
+        return Results.Ok(new { balance = balance, Credits = creditList });
+    }
+
+    public static IResult DebitExpenses(ExpenseManager manager)
+    {
+        var (balance, debitList) = manager.DebitOnly();
+        return Results.Ok(new { balance = balance, Debits = debitList });
+    }
 }

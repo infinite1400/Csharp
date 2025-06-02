@@ -46,4 +46,14 @@ app.MapDelete("/deleteExpense/{id}", (string id) =>
     return ExpenseEndpoints.DeleteExpenseById(id, expenseManager);
 });
 
+app.MapGet("/Credits", () =>
+{
+    return ExpenseEndpoints.CreditExpenses(expenseManager);
+});
+
+app.MapGet("/Debits", () =>
+{
+    return ExpenseEndpoints.DebitExpenses(expenseManager);
+});
+
 app.Run();
