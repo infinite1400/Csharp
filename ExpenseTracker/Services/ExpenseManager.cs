@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using ExpenseTracker.Models;
 
-namespace ExpenseTracker;
+namespace ExpenseTracker.Services;
 public class ExpenseManager
 {
     public List<Expense> Expenses = new List<Expense>();
