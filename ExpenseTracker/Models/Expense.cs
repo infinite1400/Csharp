@@ -1,5 +1,6 @@
 using ExpenseTracker;
 namespace ExpenseTracker.Models;
+
 public class Expense
 {
     public Guid id { get; }
@@ -16,3 +17,5 @@ public class Expense
         this.date = date;
     }
 }
+
+public record AddExpenseRequest(string Note, decimal Amount, char Type);

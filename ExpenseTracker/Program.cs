@@ -1,4 +1,5 @@
 using ExpenseTracker;
+using ExpenseTracker.Models;
 using ExpenseTracker.Endpoints;
 using ExpenseTracker.Services;
 ExpenseManager expenseManager = new ExpenseManager();
@@ -46,5 +47,3 @@ app.MapDelete("/deleteExpense/{id}", (string id) =>
 });
 
 app.Run();
-
-public record AddExpenseRequest(string Note, decimal Amount, char Type);
