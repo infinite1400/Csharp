@@ -28,14 +28,12 @@ app.MapPost("/Addexpense", async (AddExpenseRequest request, ExpenseManager mana
 {
     await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
     return Results.Ok(new { message = "Expense Added" });
-    // return ExpenseEndpoints.AddExpenseMethod(request, manager);
 });
 
 app.MapGet("/ListExpense", async (ExpenseManager manager) =>
 {
     List<Expense> expenses = await manager.ListExpensesAsync();
     return Results.Ok(expenses);
-    // return ExpenseEndpoints.ListExpense(expenseManager);
 });
 
 app.MapGet("/expense/{id}", async (string id,ExpenseManager manager) =>
@@ -43,24 +41,24 @@ app.MapGet("/expense/{id}", async (string id,ExpenseManager manager) =>
     return await ExpenseEndpoints.ExpenseById(id, manager);
 });
 
-// app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request) =>
-// {
-//     return ExpenseEndpoints.EditExpenseById(id, request, expenseManager);
-// });
+app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request,ExpenseManager manager) =>
+{
+    return ExpenseEndpoints.EditExpenseByIdAsync(id, request, manager);
+});
 
-// app.MapDelete("/deleteExpense/{id}", (string id) =>
-// {
-//     return ExpenseEndpoints.DeleteExpenseById(id, expenseManager);
-// });
+app.MapDelete("/deleteExpense/{id}", (string id,ExpenseManager manager) =>
+{
+    return ExpenseEndpoints.DeleteExpenseByIdAsync(id, manager);
+});
 
-// app.MapGet("/Credits", () =>
-// {
-//     return ExpenseEndpoints.CreditExpenses(expenseManager);
-// });
+app.MapGet("/Credits", (ExpenseManager manager) =>
+{
+    return ExpenseEndpoints.CreditExpensesAsync(manager);
+});
 
-// app.MapGet("/Debits", () =>
-// {
-//     return ExpenseEndpoints.DebitExpenses(expenseManager);
-// });
+app.MapGet("/Debits", (ExpenseManager manager) =>
+{
+    return ExpenseEndpoints.DebitExpensesAsync(manager);
+});
 
 app.Run();
