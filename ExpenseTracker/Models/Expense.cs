@@ -3,7 +3,7 @@ namespace ExpenseTracker.Models;
 
 public class Expense
 {
-    public Guid id { get; }
+    public Guid id { get; set; }
     public decimal amount { get; set; }
     public string note { get; set; } = string.Empty;
     public char type { get; set; }
