@@ -6,6 +6,7 @@ namespace ExpenseTracker.Services;
 
 public class ExpenseManager
 {
+    private readonly ExpenseDbContext _context;
     private List<Expense> _allExpenses = new List<Expense>();
     public decimal Balance = 0;
 
