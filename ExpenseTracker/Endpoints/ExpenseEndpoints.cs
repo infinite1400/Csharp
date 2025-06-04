@@ -10,12 +10,13 @@ public class ExpenseEndpoints
     public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
     {
         await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
-        return Results.Ok(new { message = "Expense added"});
+        return Results.Ok(new { message = "Expense added" });
     }
 
     public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager)
     {
-        return Results.Ok(new { Expenses = await manager.ListExpensesAsync() });
+        var (balance, expenses) = await manager.ListExpensesAsync();
+        return Results.Ok(new { balance = balance, Expenses = expenses });
     }
 
     public static async Task<IResult> ExpenseById(string id, ExpenseManager manager)
@@ -74,23 +75,23 @@ public class ExpenseEndpoints
 
     public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager)
     {
-        var creditList = await manager.CreditOnlyAsync();
+        var (credit,creditList) = await manager.CreditOnlyAsync();
         List<ExpenseDto> creditDto = new List<ExpenseDto>();
         foreach (var exp in creditList)
         {
             creditDto.Add(ExpenseDto.ToDto(exp));
         }
-        return Results.Ok(new {Credits = creditDto });
+        return Results.Ok(new { CreditAmount=credit,Credits = creditDto });
     }
 
     public static async Task<IResult> DebitExpensesAsync(ExpenseManager manager)
     {
-        var debitList = await manager.DebitOnlyAsync();
+        var (debit,debitList) = await manager.DebitOnlyAsync();
         List<ExpenseDto> debitDto = new List<ExpenseDto>();
         foreach (var exp in debitList)
         {
             debitDto.Add(ExpenseDto.ToDto(exp));
         }
-        return Results.Ok(new { Debits = debitDto });
+        return Results.Ok(new { deditAmount=debit,Debits = debitDto });
     }
 }
