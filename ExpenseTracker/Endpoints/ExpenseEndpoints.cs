@@ -7,18 +7,16 @@ namespace ExpenseTracker.Endpoints;
 
 public class ExpenseEndpoints
 {
-    // public static IResult AddExpenseMethod(AddExpenseRequest request, ExpenseManager manager)
-    // {
-    //     manager.AddExpense(request.Amount, request.Note, request.Type);
-    //     Console.WriteLine(request.ToString());
-    //     Console.WriteLine(manager.ListExpenses());
-    //     return Results.Ok(new { message = "Expense added", balance = manager.Balance });
-    // }
+    public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
+    {
+        await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
+        return Results.Ok(new { message = "Expense added"});
+    }
 
-    // public static IResult ListExpense(ExpenseManager manager)
-    // {
-    //     return Results.Ok(new { Balance = manager.Balance, Expenses = manager.ListExpenses() });
-    // }
+    public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager)
+    {
+        return Results.Ok(new { Expenses = await manager.ListExpensesAsync() });
+    }
 
     public static async Task<IResult> ExpenseById(string id, ExpenseManager manager)
     {

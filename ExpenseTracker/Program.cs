@@ -26,27 +26,26 @@ app.UseHttpsRedirection();
 
 app.MapPost("/Addexpense", async (AddExpenseRequest request, ExpenseManager manager) =>
 {
-    await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
-    return Results.Ok(new { message = "Expense Added" });
+    return await ExpenseEndpoints.AddExpenseMethodAsync(request, manager);
+    // return Results.Ok(new { message = "Expense Added" });
 });
 
 app.MapGet("/ListExpense", async (ExpenseManager manager) =>
 {
-    List<Expense> expenses = await manager.ListExpensesAsync();
-    return Results.Ok(expenses);
+    return await ExpenseEndpoints.ListExpenseMethodAsync(manager);
 });
 
-app.MapGet("/expense/{id}", async (string id,ExpenseManager manager) =>
+app.MapGet("/expense/{id}", async (string id, ExpenseManager manager) =>
 {
     return await ExpenseEndpoints.ExpenseById(id, manager);
 });
 
-app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request,ExpenseManager manager) =>
+app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request, ExpenseManager manager) =>
 {
     return ExpenseEndpoints.EditExpenseByIdAsync(id, request, manager);
 });
 
-app.MapDelete("/deleteExpense/{id}", (string id,ExpenseManager manager) =>
+app.MapDelete("/deleteExpense/{id}", (string id, ExpenseManager manager) =>
 {
     return ExpenseEndpoints.DeleteExpenseByIdAsync(id, manager);
 });
