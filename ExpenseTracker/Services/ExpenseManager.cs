@@ -37,7 +37,7 @@ public class ExpenseManager
         return balance;
     }
 
-    public async Task AddExpenseAsync(decimal expenseAmount, string expenseNote, char expenseType)
+    public async Task<(decimal,Expense)> AddExpenseAsync(decimal expenseAmount, string expenseNote, char expenseType)
     {
         Expense exp = new Expense(
             expenseAmount,
@@ -47,6 +47,8 @@ public class ExpenseManager
         );
         _context.Expenses.Add(exp);
         await _context.SaveChangesAsync();
+        decimal balance = await CalculateBalance(_context);
+        return (balance, exp);
     }
     public async Task<(decimal, List<Expense>)> ListExpensesAsync()
     {

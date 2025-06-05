@@ -9,8 +9,8 @@ public class ExpenseEndpoints
 {
     public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
     {
-        await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
-        return Results.Ok(new { message = "Expense added" });
+        var (Balance, expense) = await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
+        return Results.Ok(new { message = "Expense added", Balance = Balance, Expense = expense });
     }
 
     public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager)
@@ -48,7 +48,7 @@ public class ExpenseEndpoints
             return Results.NotFound(new { message = "No Expense by this id" });
         }
         var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
-        return Results.Ok(new { message = "Updated Expense", editExpense, Balance = Balance });
+        return Results.Ok(new { message = "Updated Expense", editExpense = ExpenseDto.ToDto(editExpense), Balance = Balance });
     }
 
     public static async Task<IResult> DeleteExpenseByIdAsync(string id, ExpenseManager manager)
@@ -63,7 +63,7 @@ public class ExpenseEndpoints
             return Results.NotFound(new { message = "No Expense by this id" });
         }
         var (Balance, expense) = await manager.DeleteExpenseAsync(guid);
-        return Results.Ok(new { message = "Deleted Expense", Balance = Balance, DeleteExpense = expense });
+        return Results.Ok(new { message = "Deleted Expense", Balance = Balance, DeleteExpense = ExpenseDto.ToDto(expense) });
     }
 
     public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager)
