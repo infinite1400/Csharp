@@ -47,8 +47,8 @@ public class ExpenseEndpoints
         {
             return Results.NotFound(new { message = "No Expense by this id" });
         }
-        var editExpense = manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
-        return Results.Ok(new { message = "Updated Expense", editExpense, balance = manager.Balance });
+        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
+        return Results.Ok(new { message = "Updated Expense", editExpense, Balance = Balance });
     }
 
     public static async Task<IResult> DeleteExpenseByIdAsync(string id, ExpenseManager manager)
@@ -62,36 +62,29 @@ public class ExpenseEndpoints
         {
             return Results.NotFound(new { message = "No Expense by this id" });
         }
-        if (exp.type == 'C')
-        {
-            manager.Balance -= exp.amount;
-        }
-        else
-        {
-            manager.Balance += exp.amount;
-        }
-        return Results.Ok(new { message = "Deleted Expense", DeleteExpense = manager.DeleteExpenseAsync(guid), balance = manager.Balance });
+        var (Balance, expense) = await manager.DeleteExpenseAsync(guid);
+        return Results.Ok(new { message = "Deleted Expense", Balance = Balance, DeleteExpense = expense });
     }
 
     public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager)
     {
-        var (credit,creditList) = await manager.CreditOnlyAsync();
+        var (credit, creditList) = await manager.CreditOnlyAsync();
         List<ExpenseDto> creditDto = new List<ExpenseDto>();
         foreach (var exp in creditList)
         {
             creditDto.Add(ExpenseDto.ToDto(exp));
         }
-        return Results.Ok(new { CreditAmount=credit,Credits = creditDto });
+        return Results.Ok(new { CreditAmount = credit, Credits = creditDto });
     }
 
     public static async Task<IResult> DebitExpensesAsync(ExpenseManager manager)
     {
-        var (debit,debitList) = await manager.DebitOnlyAsync();
+        var (debit, debitList) = await manager.DebitOnlyAsync();
         List<ExpenseDto> debitDto = new List<ExpenseDto>();
         foreach (var exp in debitList)
         {
             debitDto.Add(ExpenseDto.ToDto(exp));
         }
-        return Results.Ok(new { deditAmount=debit,Debits = debitDto });
+        return Results.Ok(new { deditAmount = debit, Debits = debitDto });
     }
 }
