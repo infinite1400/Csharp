@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ExpenseTracker.Data;
 using ExpenseTracker.Models;
+using ExpenseTracker.Dto;
 using ExpenseTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
@@ -90,6 +91,15 @@ public class ExpenseManager
         return balance;
     }
 
+    public List<ExpenseDto> ConvertResponse(List<Expense> expenses)
+    {
+        List<ExpenseDto> expenseDtos = new List<ExpenseDto>();
+        foreach (var exp in expenses)
+        {
+            expenseDtos.Add(ExpenseDto.ToDto(exp));
+        }
+        return expenseDtos;
+    }
     public async Task<(decimal, Expense)> AddExpenseAsync(decimal expenseAmount, string expenseNote, char expenseType)
     {
         Expense exp = new Expense(
@@ -206,6 +216,25 @@ public class ExpenseManager
         }
         decimal debitAmount = CalculateBalance(DebitList);
         return (debitAmount, DebitList);
+    }
+
+
+    public async Task<(decimal, List<ExpenseDto>?)> MonthExpenseAsync(int month, int year)
+    {
+        List<Expense> MonthlyExpenses = new List<Expense>();
+        List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        foreach (var exp in Expenses)
+        {
+            DateTime date = exp.date;
+            if (date.Year == year && date.Month == month)
+            {
+                MonthlyExpenses.Add(exp);
+            }
+        }
+        if (MonthlyExpenses.Count == 0) return (0, null);
+        decimal balance = CalculateBalance(MonthlyExpenses);
+        List<ExpenseDto> ExpensesDto = ConvertResponse(MonthlyExpenses);
+        return (balance, ExpensesDto);
     }
 
 }

@@ -67,4 +67,9 @@ app.MapGet("/Debits", (ExpenseManager manager) =>
     return ExpenseEndpoints.DebitExpensesAsync(manager);
 });
 
+app.MapGet("/MonthlyExpense/month={month}/year={year}", (int month, int year, ExpenseManager manager) =>
+{
+    return ExpenseEndpoints.ListExpenseByMonthAsync(month, year, manager);
+});
+
 app.Run();
