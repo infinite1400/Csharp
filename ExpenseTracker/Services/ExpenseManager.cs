@@ -236,5 +236,22 @@ public class ExpenseManager
         List<ExpenseDto> ExpensesDto = ConvertResponse(MonthlyExpenses);
         return (balance, ExpensesDto);
     }
+    public async Task<(decimal, List<ExpenseDto>?)> DateExpenseAsync(DateTime date)
+    {
+        List<Expense> MonthlyExpenses = new List<Expense>();
+        List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        foreach (var exp in Expenses)
+        {
+            DateTime Expdate = exp.date;
+            if (Expdate.Year == date.Year && Expdate.Month == date.Month && Expdate.Day == date.Day)
+            {
+                MonthlyExpenses.Add(exp);
+            }
+        }
+        if (MonthlyExpenses.Count == 0) return (0, null);
+        decimal balance = CalculateBalance(MonthlyExpenses);
+        List<ExpenseDto> ExpensesDto = ConvertResponse(MonthlyExpenses);
+        return (balance, ExpensesDto);
+    }
 
 }

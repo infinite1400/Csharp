@@ -22,12 +22,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// using (var scope = app.Services.CreateScope())
-// {
-//     var services = scope.ServiceProvider;
-//     var expenseManager=services.GetRequiredService<ExpenseManager>();
-//     await expenseManager.GenerateDataAsync();
-// }
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var expenseManager = services.GetRequiredService<ExpenseManager>();
+    await expenseManager.GenerateDataAsync();
+}
 
 
 app.UseHttpsRedirection();
@@ -70,6 +70,11 @@ app.MapGet("/Debits", (ExpenseManager manager) =>
 app.MapGet("/MonthlyExpense/month={month}/year={year}", (int month, int year, ExpenseManager manager) =>
 {
     return ExpenseEndpoints.ListExpenseByMonthAsync(month, year, manager);
+});
+app.MapGet("/DateExpense/day={day}/month={month}/year={year}", (int day, int month, int year, ExpenseManager manager) =>
+{
+    DateTime date = new(year, month, day);
+    return ExpenseEndpoints.ListExpenseByDateAsync(date, manager);
 });
 
 app.Run();

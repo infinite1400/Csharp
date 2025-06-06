@@ -97,12 +97,36 @@ public class ExpenseEndpoints
         }
         if (!(year >= 2000 && year <= 2100))
         {
-            return Results.BadRequest(new { message ="Enter Valid Year from 2000 to 2100 !"});
+            return Results.BadRequest(new { message = "Enter Valid Year from 2000 to 2100 !" });
         }
         if (MonthlyExpense == null)
         {
             return Results.NotFound(new { message = $"No Expenses for Month = {month} & Year = {year}" });
         }
         return Results.Ok(new { MonthyBalance = balance, MonthlyExpense = MonthlyExpense });
+    }
+    public static async Task<IResult> ListExpenseByDateAsync(DateTime date, ExpenseManager manager)
+    {
+        var (balance, DateExpense) = await manager.DateExpenseAsync(date);
+        int day = date.Day;
+        int month = date.Month;
+        int year = date.Year;
+        if (!(day >= 1 && day <= 31))
+        {
+            return Results.BadRequest(new { message = "Enter Valid Month from 1(January) to 12(December)" });
+        }
+        if (!(month >= 1 && month <= 12))
+        {
+            return Results.BadRequest(new { message = "Enter Valid Month from 1(January) to 12(December)" });
+        }
+        if (!(year >= 2000 && year <= 2100))
+        {
+            return Results.BadRequest(new { message = "Enter Valid Year from 2000 to 2100 !" });
+        }
+        if (DateExpense == null)
+        {
+            return Results.NotFound(new { message = $"No Expenses for Month = {month} & Year = {year}" });
+        }
+        return Results.Ok(new { MonthyBalance = balance, DateExpense = DateExpense });
     }
 }
