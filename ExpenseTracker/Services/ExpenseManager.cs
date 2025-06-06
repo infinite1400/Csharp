@@ -56,10 +56,26 @@ public class ExpenseManager
         }
         await _context.SaveChangesAsync();
     }
-    public async Task<decimal> CalculateBalance(AppDbContext context)
+    public async Task<decimal> CalculateBalance()
     {
         decimal balance = 0;
-        List<Expense> Expenses = await context.Expenses.ToListAsync();
+        List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        foreach (Expense expense in Expenses)
+        {
+            if (expense.type == 'C')
+            {
+                balance += expense.amount;
+            }
+            else
+            {
+                balance -= expense.amount;
+            }
+        }
+        return balance;
+    }
+    public decimal CalculateBalance(List<Expense> Expenses)
+    {
+        decimal balance = 0;
         foreach (Expense expense in Expenses)
         {
             if (expense.type == 'C')
@@ -84,13 +100,13 @@ public class ExpenseManager
         );
         _context.Expenses.Add(exp);
         await _context.SaveChangesAsync();
-        decimal balance = await CalculateBalance(_context);
+        decimal balance = await CalculateBalance();
         return (balance, exp);
     }
     public async Task<(decimal, List<Expense>)> ListExpensesAsync()
     {
         List<Expense> expenses = await _context.Expenses.ToListAsync();
-        decimal balance = await CalculateBalance(_context);
+        decimal balance = await CalculateBalance();
         return (balance, expenses);
     }
     public async Task<Expense?> FindExpenseByIdAsync(Guid id)
@@ -110,7 +126,7 @@ public class ExpenseManager
     {
         var expense = await _context.Expenses.FindAsync(id);
         if (expense == null) return (null, null);
-        decimal Balance = await CalculateBalance(_context);
+        decimal Balance = await CalculateBalance();
         if (type == expense.type)
         {
             if (type == 'D')
@@ -149,7 +165,7 @@ public class ExpenseManager
         var expense = await _context.Expenses.FindAsync(id);
         if (expense == null) return (null, null);
         _context.Expenses.Remove(expense);
-        decimal Balance = await CalculateBalance(_context);
+        decimal Balance = await CalculateBalance();
         if (expense.type == 'C')
         {
             Balance -= expense.amount;
@@ -173,7 +189,7 @@ public class ExpenseManager
                 CreditList.Add(exp);
             }
         }
-        decimal creditAmount = await CalculateBalance(_context);
+        decimal creditAmount = CalculateBalance(CreditList);
         return (creditAmount, CreditList);
     }
 
@@ -188,7 +204,7 @@ public class ExpenseManager
                 DebitList.Add(exp);
             }
         }
-        decimal debitAmount = await CalculateBalance(_context);
+        decimal debitAmount = CalculateBalance(DebitList);
         return (debitAmount, DebitList);
     }
 
