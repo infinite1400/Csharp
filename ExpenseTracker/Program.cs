@@ -4,6 +4,7 @@ using ExpenseTracker.Endpoints;
 using ExpenseTracker.Services;
 using ExpenseTracker.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 // ExpenseManager expenseManager = new ExpenseManager();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,9 +22,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     var expenseManager=services.GetRequiredService<ExpenseManager>();
+//     await expenseManager.GenerateDataAsync();
+// }
+
 
 app.UseHttpsRedirection();
-
 app.MapPost("/Addexpense", async (AddExpenseRequest request, ExpenseManager manager) =>
 {
     return await ExpenseEndpoints.AddExpenseMethodAsync(request, manager);
