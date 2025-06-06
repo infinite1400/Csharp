@@ -2,14 +2,18 @@ using ExpenseTracker;
 using ExpenseTracker.Models;
 using ExpenseTracker.Endpoints;
 using ExpenseTracker.Services;
-ExpenseManager expenseManager = new ExpenseManager();
+using ExpenseTracker.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+// ExpenseManager expenseManager = new ExpenseManager();
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=expenses.db"));
+builder.Services.AddScoped<ExpenseManager>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -18,42 +22,49 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// using (var scope = app.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+//     var expenseManager=services.GetRequiredService<ExpenseManager>();
+//     await expenseManager.GenerateDataAsync();
+// }
+
 
 app.UseHttpsRedirection();
-
-app.MapPost("/Addexpense", (AddExpenseRequest request) =>
+app.MapPost("/Addexpense", async (AddExpenseRequest request, ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.AddExpenseMethod(request, expenseManager);
+    return await ExpenseEndpoints.AddExpenseMethodAsync(request, manager);
+    // return Results.Ok(new { message = "Expense Added" });
 });
 
-app.MapGet("/ListExpense", () =>
+app.MapGet("/ListExpense", async (ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.ListExpense(expenseManager);
+    return await ExpenseEndpoints.ListExpenseMethodAsync(manager);
 });
 
-app.MapGet("/expense/{id}", (string id) =>
+app.MapGet("/expense/{id}", async (string id, ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.ExpenseById(id, expenseManager);
+    return await ExpenseEndpoints.ExpenseById(id, manager);
 });
 
-app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request) =>
+app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request, ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.EditExpenseById(id, request, expenseManager);
+    return ExpenseEndpoints.EditExpenseByIdAsync(id, request, manager);
 });
 
-app.MapDelete("/deleteExpense/{id}", (string id) =>
+app.MapDelete("/deleteExpense/{id}", (string id, ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.DeleteExpenseById(id, expenseManager);
+    return ExpenseEndpoints.DeleteExpenseByIdAsync(id, manager);
 });
 
-app.MapGet("/Credits", () =>
+app.MapGet("/Credits", (ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.CreditExpenses(expenseManager);
+    return ExpenseEndpoints.CreditExpensesAsync(manager);
 });
 
-app.MapGet("/Debits", () =>
+app.MapGet("/Debits", (ExpenseManager manager) =>
 {
-    return ExpenseEndpoints.DebitExpenses(expenseManager);
+    return ExpenseEndpoints.DebitExpensesAsync(manager);
 });
 
 app.Run();
