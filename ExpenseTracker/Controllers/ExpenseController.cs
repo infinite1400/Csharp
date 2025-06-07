@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Http;
 using ExpenseTracker.Models;
 using ExpenseTracker.Services;
 using ExpenseTracker.Dto;
-namespace ExpenseTracker.Endpoints;
+namespace ExpenseTracker.Controllers;
 
 
-public class ExpenseEndpoints
+public class ExpenseController
 {
     public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
     {
