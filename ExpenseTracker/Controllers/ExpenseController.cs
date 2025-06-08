@@ -42,12 +42,11 @@ public class ExpenseController
         {
             return Results.BadRequest(new { message = "Invalid Guid Format" });
         }
-        var exp = await manager.FindExpenseByIdAsync(guid);
-        if (exp == null)
+        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
+        if (editExpense == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
         }
-        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
         return Results.Ok(new { message = "Updated Expense", editExpense = ExpenseDto.ToDto(editExpense), Balance = Balance });
     }
 
@@ -57,12 +56,11 @@ public class ExpenseController
         {
             return Results.BadRequest(new { message = "Invalid Guid Format" });
         }
-        var exp = await manager.FindExpenseByIdAsync(guid);
-        if (exp == null)
+        var (Balance, expense) = await manager.DeleteExpenseAsync(guid);
+        if (expense == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
         }
-        var (Balance, expense) = await manager.DeleteExpenseAsync(guid);
         return Results.Ok(new { message = "Deleted Expense", Balance = Balance, DeleteExpense = ExpenseDto.ToDto(expense) });
     }
 
@@ -105,28 +103,37 @@ public class ExpenseController
         }
         return Results.Ok(new { MonthyBalance = balance, MonthlyExpense = MonthlyExpense });
     }
-    public static async Task<IResult> ListExpenseByDateAsync(DateTime date, ExpenseManager manager)
+    public static async Task<IResult> ListExpenseByDateAsync(string date, ExpenseManager manager)
     {
-        var (balance, DateExpense) = await manager.DateExpenseAsync(date);
-        int day = date.Day;
-        int month = date.Month;
-        int year = date.Year;
-        if (!(day >= 1 && day <= 31))
+        if (!DateTime.TryParse(date, out var parsedDate))
         {
-            return Results.BadRequest(new { message = "Enter Valid Month from 1(January) to 12(December)" });
+            return Results.BadRequest(new { message = "Enter date correctly in format YYYY-MM-DD" });
         }
-        if (!(month >= 1 && month <= 12))
-        {
-            return Results.BadRequest(new { message = "Enter Valid Month from 1(January) to 12(December)" });
-        }
-        if (!(year >= 2000 && year <= 2100))
-        {
-            return Results.BadRequest(new { message = "Enter Valid Year from 2000 to 2100 !" });
-        }
+        var (balance, DateExpense) = await manager.DateExpenseAsync(parsedDate);
         if (DateExpense == null)
         {
-            return Results.NotFound(new { message = $"No Expenses for Month = {month} & Year = {year}" });
+            return Results.NotFound(new { message = $"No Expenses for Month = {parsedDate.Month} & Year = {parsedDate.Year}" });
         }
         return Results.Ok(new { MonthyBalance = balance, DateExpense = DateExpense });
+    }
+
+    public static async Task<IResult> ListExpenseByRangeAsync(string date1, string date2, ExpenseManager manager)
+    {
+        // validating date1
+        if (!DateTime.TryParse(date1, out var parsedDate1))
+        {
+            return Results.BadRequest(new { message = "Enter date1 correctly in format YYYY-MM-DD" });
+        }
+        // validating date 2
+        if (!DateTime.TryParse(date2, out var parsedDate2))
+        {
+            return Results.BadRequest(new { message = "Enter date2 correctly in format YYYY-MM-DD" });
+        }
+        var (balance, RangeExpenses) = await manager.ExpenseByRangeAsync(parsedDate1, parsedDate2);
+        if (RangeExpenses == null)
+        {
+            return Results.NotFound(new { message = "No expenses in this Date Range" });
+        }
+        return Results.Ok(new { RangeBalance = balance, RangeExpenses = RangeExpenses });
     }
 }

@@ -7,6 +7,7 @@ using ExpenseTracker.Dto;
 using ExpenseTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
+using Microsoft.AspNetCore.Identity;
 namespace ExpenseTracker.Services;
 
 public class ExpenseManager
@@ -136,38 +137,12 @@ public class ExpenseManager
     {
         var expense = await _context.Expenses.FindAsync(id);
         if (expense == null) return (null, null);
-        decimal Balance = await CalculateBalance();
-        if (type == expense.type)
-        {
-            if (type == 'D')
-            {
-                // for debit (plus previous debit amount and minus current update
-                // amount )
-                Balance += expense.amount - amount;
-            }
-            else
-            {
-                // for credit (minus previous credit amount and add current update
-                // amount )
-                Balance += -expense.amount + amount;
-            }
-        }
-        else
-        {
-            if (expense.type == 'D' && type == 'C')
-            {
-                Balance += expense.amount + amount;
-            }
-            else
-            {
-                Balance += -expense.amount - amount;
-            }
-        }
         expense.amount = amount;
         expense.note = note;
         expense.type = type;
         expense.date = DateTime.Now;
         await _context.SaveChangesAsync();
+        decimal Balance = await CalculateBalance();
         return (Balance, expense);
     }
     public async Task<(decimal?, Expense?)> DeleteExpenseAsync(Guid id)
@@ -175,16 +150,8 @@ public class ExpenseManager
         var expense = await _context.Expenses.FindAsync(id);
         if (expense == null) return (null, null);
         _context.Expenses.Remove(expense);
-        decimal Balance = await CalculateBalance();
-        if (expense.type == 'C')
-        {
-            Balance -= expense.amount;
-        }
-        else
-        {
-            Balance += expense.amount;
-        }
         await _context.SaveChangesAsync();
+        decimal Balance = await CalculateBalance();
         return (Balance, expense);
     }
 
@@ -252,6 +219,24 @@ public class ExpenseManager
         decimal balance = CalculateBalance(MonthlyExpenses);
         List<ExpenseDto> ExpensesDto = ConvertResponse(MonthlyExpenses);
         return (balance, ExpensesDto);
+    }
+
+    public async Task<(decimal, List<ExpenseDto>?)> ExpenseByRangeAsync(DateTime date1, DateTime date2)
+    {
+        List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        List<Expense> RangeExpense = new List<Expense>();
+        foreach (var exp in Expenses)
+        {
+            DateTime date = exp.date;
+            if (date.Date >= date1.Date && date.Date <= date2.Date)
+            {
+                RangeExpense.Add(exp);
+            }
+        }
+        if (RangeExpense.Count == 0) return (0, null);
+        decimal balance = CalculateBalance(RangeExpense);
+        List<ExpenseDto> expenseDtos = ConvertResponse(RangeExpense);
+        return (balance, expenseDtos);
     }
 
 }

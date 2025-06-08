@@ -48,10 +48,14 @@ public static class ExpenseApis
         {
             return ExpenseController.ListExpenseByMonthAsync(month, year, manager);
         });
-        app.MapGet("/DateExpense/day={day}/month={month}/year={year}", (int day, int month, int year, ExpenseManager manager) =>
+        app.MapGet("/DateExpense/Date={date}", (string date, ExpenseManager manager) =>
         {
-            DateTime date = new(year, month, day);
             return ExpenseController.ListExpenseByDateAsync(date, manager);
+        });
+
+        app.MapGet("/RangeExpenses/Date1={date1}/Date2={date2}", (string date1, string date2, ExpenseManager manager) =>
+        {
+            return ExpenseController.ListExpenseByRangeAsync(date1, date2, manager);
         });
     }
 }
