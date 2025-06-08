@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=expenses.db"));
 builder.Services.AddScoped<ExpenseManager>();
+builder.Services.AddScoped<AuthManager>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,4 +35,5 @@ app.UseHttpsRedirection();
 
 // Expense Apis 
 app.MapExpenseApis();
+app.MapAuthApis();
 app.Run();
