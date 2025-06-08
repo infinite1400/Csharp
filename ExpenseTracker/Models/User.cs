@@ -15,7 +15,15 @@ public class User
         this.Email = Email;
         this.Password = Password;
     }
+    public User()
+    {
+        UserId = Guid.Empty;
+        Name = string.Empty;
+        Email = string.Empty;
+        Password = string.Empty;
+    }
 }
 
 public record SignUpRequest(string Name, string Email, string Password);
 public record SignInRequest(string Email, string Password);
+public record EditRequest(string Name, string Email, string OldPassword,string NewPassword);

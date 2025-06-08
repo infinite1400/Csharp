@@ -17,5 +17,15 @@ public static class AuthApis
         {
             return AuthController.SignInController(request, manager);
         });
+
+        app.MapGet("/Auth/Users", (AuthManager manager) =>
+        {
+            return AuthController.ListUsersController(manager);
+        });
+
+        app.MapPost("/Auth/editpassword", (EditRequest request, AuthManager manager) =>
+        {
+            return AuthController.EditPasswordController(request, manager);
+        });
     }
 }
