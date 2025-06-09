@@ -17,9 +17,13 @@ public class AuthController
     public static string JWTTokenGenerator(User user)
     {
         DotEnv.Load();
-        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
-        var tokenHandler = new JwtSecurityTokenHandler();
+        string? jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+        if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
+        {
+            throw new Exception("JWT_SECRET_KEY is missing or too short (must be at least 16 characters).");
+        }
         var key = Encoding.ASCII.GetBytes(jwtSecret);
+        var tokenHandler = new JwtSecurityTokenHandler();
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -63,8 +67,8 @@ public class AuthController
         var result = hasher.VerifyHashedPassword(user, user.Password, request.Password);
         if (result == PasswordVerificationResult.Success)
         {
-            var AuthToken = JWTTokenGenerator(user);
-            return Results.Ok(new { message = "SignIn successful", Token = AuthToken });
+            var authToken = JWTTokenGenerator(user);
+            return Results.Ok(new { message = "SignIn successful", Token = authToken });
         }
         return Results.BadRequest(new { message = "Wrong Password !" });
     }

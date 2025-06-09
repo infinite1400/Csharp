@@ -20,4 +20,4 @@ public class Expense
     }
 }
 
-public record AddExpenseRequest(string Note, decimal Amount, char Type, string userId);
+public record AddExpenseRequest(string Note, decimal Amount, char Type);

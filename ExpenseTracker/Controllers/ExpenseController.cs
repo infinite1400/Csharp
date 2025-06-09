@@ -7,13 +7,9 @@ namespace ExpenseTracker.Controllers;
 
 public class ExpenseController
 {
-    public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
+    public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager, Guid userId)
     {
-        var (Balance, expense) = await manager.AddExpenseAsync(request);
-        if (expense == null)
-        {
-            return Results.BadRequest(new { message = "Invalid UserGuid format" });
-        }
+        var (Balance, expense) = await manager.AddExpenseAsync(request, userId);
         return Results.Ok(new { message = "Expense added", Balance = Balance, Expense = expense });
     }
 

@@ -22,6 +22,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=expenses.db"));
 builder.Services.AddScoped<ExpenseManager>();
 builder.Services.AddScoped<AuthManager>();
+DotEnv.Load();
+string? jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
+{
+    throw new Exception("JWT_SECRET_KEY is missing or too short (must be at least 16 characters).");
+}
+var key = Encoding.ASCII.GetBytes(jwtSecret);
 builder.Services.AddAuthentication("Bearer")
 .AddJwtBearer("Bearer", options =>
 {
@@ -31,9 +38,7 @@ builder.Services.AddAuthentication("Bearer")
         ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("Murari Pandey")
-        )
+        IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
 builder.Services.AddAuthorization();

@@ -2,16 +2,23 @@
 using ExpenseTracker.Models;
 using ExpenseTracker.Services;
 using ExpenseTracker.Controllers;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 namespace ExpenseTracker.API;
 
 public static class ExpenseApis
 {
     public static void MapExpenseApis(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/Addexpense", async (AddExpenseRequest request, ExpenseManager manager) =>
+        app.MapPost("/Addexpense", [Authorize] async (HttpContext http, AddExpenseRequest request, ExpenseManager manager) =>
         {
-            return await ExpenseController.AddExpenseMethodAsync(request, manager);
-            // return Results.Ok(new { message = "Expense Added" });
+            var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Results.Unauthorized();
+            }
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            return await ExpenseController.AddExpenseMethodAsync(request, manager, userId);
         });
 
         app.MapGet("/ListExpense", async (ExpenseManager manager) =>

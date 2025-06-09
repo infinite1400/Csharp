@@ -109,18 +109,14 @@ public class ExpenseManager
         }
         return expenseDtos;
     }
-    public async Task<(decimal, Expense?)> AddExpenseAsync(AddExpenseRequest request)
+    public async Task<(decimal, Expense)> AddExpenseAsync(AddExpenseRequest request,Guid userId)
     {
-        if (Guid.TryParse(request.userId, out var userGuid) == false)
-        {
-            return (0, null);
-        }
         Expense exp = new Expense(
             request.Amount,
             DateTime.Now,
             request.Note,
             request.Type,
-            userGuid
+            userId
         );
         _context.Expenses.Add(exp);
         await _context.SaveChangesAsync();
