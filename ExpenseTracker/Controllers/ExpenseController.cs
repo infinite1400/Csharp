@@ -9,7 +9,11 @@ public class ExpenseController
 {
     public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
     {
-        var (Balance, expense) = await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
+        var (Balance, expense) = await manager.AddExpenseAsync(request);
+        if (expense == null)
+        {
+            return Results.BadRequest(new { message = "Invalid UserGuid format" });
+        }
         return Results.Ok(new { message = "Expense added", Balance = Balance, Expense = expense });
     }
 

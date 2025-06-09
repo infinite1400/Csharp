@@ -8,6 +8,7 @@ using ExpenseTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.VisualBasic;
 namespace ExpenseTracker.Services;
 
 public class ExpenseManager
@@ -20,44 +21,51 @@ public class ExpenseManager
         _context = context;
     }
 
-    public decimal Balance = 0;
-    public async Task GenerateDataAsync()
+    public async Task DeleteAllExpense()
     {
-        var rand = new Random();
-        for (int i = 0; i < 100; i++)
-        {
-            int year = 2025;
-            int month = rand.Next(1, 7);
-            int day;
-            if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
-            {
-                day = rand.Next(1, 32);
-            }
-            else if (month == 2)
-            {
-                day = rand.Next(1, 29);
-            }
-            else
-            {
-                day = rand.Next(1, 31);
-            }
-            int hours = rand.Next(0, 24);
-            int minutes = rand.Next(0, 60);
-            int secs = rand.Next(0, 60);
-            DateTime date = new DateTime(year, month, day, hours, minutes, secs);
-            string note = $" Expense Number :- {i}";
-            decimal amount = rand.Next(100, 1000);
-            char type = i % 2 == 0 ? 'C' : 'D';
-            Expense exp = new Expense(
-                amount,
-                date,
-                note,
-                type
-            );
-            _context.Expenses.Add(exp);
-        }
+        var allexp = await _context.Expenses.ToListAsync();
+        _context.Expenses.RemoveRange(allexp);
         await _context.SaveChangesAsync();
     }
+
+    public decimal Balance = 0;
+    // public async Task GenerateDataAsync()
+    // {
+    //     var rand = new Random();
+    //     for (int i = 0; i < 10; i++)
+    //     {
+    //         int year = 2025;
+    //         int month = rand.Next(1, 7);
+    //         int day;
+    //         if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
+    //         {
+    //             day = rand.Next(1, 32);
+    //         }
+    //         else if (month == 2)
+    //         {
+    //             day = rand.Next(1, 29);
+    //         }
+    //         else
+    //         {
+    //             day = rand.Next(1, 31);
+    //         }
+    //         int hours = rand.Next(0, 24);
+    //         int minutes = rand.Next(0, 60);
+    //         int secs = rand.Next(0, 60);
+    //         DateTime date = new DateTime(year, month, day, hours, minutes, secs);
+    //         string note = $" Expense Number :- {i}";
+    //         decimal amount = rand.Next(100, 1000);
+    //         char type = i % 2 == 0 ? 'C' : 'D';
+    //         Expense exp = new Expense(
+    //             amount,
+    //             date,
+    //             note,
+    //             type
+    //         );
+    //         _context.Expenses.Add(exp);
+    //     }
+    //     await _context.SaveChangesAsync();
+    // }
     public async Task<decimal> CalculateBalance()
     {
         decimal balance = 0;
@@ -101,13 +109,18 @@ public class ExpenseManager
         }
         return expenseDtos;
     }
-    public async Task<(decimal, Expense)> AddExpenseAsync(decimal expenseAmount, string expenseNote, char expenseType)
+    public async Task<(decimal, Expense?)> AddExpenseAsync(AddExpenseRequest request)
     {
+        if (Guid.TryParse(request.userId, out var userGuid) == false)
+        {
+            return (0, null);
+        }
         Expense exp = new Expense(
-            expenseAmount,
+            request.Amount,
             DateTime.Now,
-            expenseNote,
-            expenseType
+            request.Note,
+            request.Type,
+            userGuid
         );
         _context.Expenses.Add(exp);
         await _context.SaveChangesAsync();

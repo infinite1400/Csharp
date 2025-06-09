@@ -27,9 +27,10 @@ if (app.Environment.IsDevelopment())
 // {
 //     var services = scope.ServiceProvider;
 //     var expenseManager = services.GetRequiredService<ExpenseManager>();
-//     await expenseManager.GenerateDataAsync();
+//     // await expenseManager.GenerateDataAsync();
+//     // await expenseManager.DeleteAllExpense();
+//     Console.WriteLine("Task Done !");
 // }
-
 
 app.UseHttpsRedirection();
 
