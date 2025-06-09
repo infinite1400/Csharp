@@ -6,6 +6,13 @@ using ExpenseTracker.Data;
 using ExpenseTracker.API;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using dotenv.net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +22,21 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=expenses.db"));
 builder.Services.AddScoped<ExpenseManager>();
 builder.Services.AddScoped<AuthManager>();
+builder.Services.AddAuthentication("Bearer")
+.AddJwtBearer("Bearer", options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes("Murari Pandey")
+        )
+    };
+});
+builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -31,6 +53,8 @@ if (app.Environment.IsDevelopment())
 //     // await expenseManager.DeleteAllExpense();
 //     Console.WriteLine("Task Done !");
 // }
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
 
@@ -38,3 +62,4 @@ app.UseHttpsRedirection();
 app.MapExpenseApis();
 app.MapAuthApis();
 app.Run();
+
