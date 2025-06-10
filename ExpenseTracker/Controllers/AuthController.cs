@@ -9,6 +9,7 @@ using System.Text;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using dotenv.net;
 using Microsoft.VisualBasic;
 
@@ -41,8 +42,21 @@ public class AuthController
         var jwt = tokenHandler.WriteToken(token);
         return jwt;
     }
+    public static bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
+        string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        return Regex.IsMatch(email, pattern, RegexOptions.IgnoreCase);
+    }
     public static async Task<IResult> SignUpController(SignUpRequest request, AuthManager manager)
     {
+        if (IsValidEmail(request.Email) == false)
+        {
+            return Results.BadRequest(new { message = "Enter correct Email format string pattern [local-part]@[domain].[top-level-domain] Ex-mp123@gmail.com" });
+        }
         var user = await manager.SignUpAsync(request);
         if (user == null)
         {
