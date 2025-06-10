@@ -13,19 +13,19 @@ public class ExpenseController
         return Results.Ok(new { message = "Expense added", Balance = Balance, Expense = expense });
     }
 
-    public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager)
+    public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager,Guid userId)
     {
-        var (balance, expenses) = await manager.ListExpensesAsync();
+        var (balance, expenses) = await manager.ListExpensesAsync(userId);
         return Results.Ok(new { balance = balance, Expenses = expenses });
     }
 
-    public static async Task<IResult> ExpenseById(string id, ExpenseManager manager)
+    public static async Task<IResult> ExpenseById(string id, ExpenseManager manager,Guid userId)
     {
         if (Guid.TryParse(id, out var guid) == false)
         {
-            return Results.BadRequest(new { message = "Invalid Guid Format" });
+            return Results.BadRequest(new { message = "Invalid Expense Guid Format" });
         }
-        var exp = await manager.FindExpenseByIdAsync(guid);
+        var exp = await manager.FindExpenseByIdAsync(guid,userId);
         if (exp == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
@@ -36,13 +36,13 @@ public class ExpenseController
         }
     }
 
-    public static async Task<IResult> EditExpenseByIdAsync(string id, AddExpenseRequest request, ExpenseManager manager)
+    public static async Task<IResult> EditExpenseByIdAsync(string id, AddExpenseRequest request, ExpenseManager manager,Guid userId)
     {
         if (Guid.TryParse(id, out var guid) == false)
         {
             return Results.BadRequest(new { message = "Invalid Guid Format" });
         }
-        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
+        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type,userId);
         if (editExpense == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
@@ -50,13 +50,13 @@ public class ExpenseController
         return Results.Ok(new { message = "Updated Expense", editExpense = ExpenseDto.ToDto(editExpense), Balance = Balance });
     }
 
-    public static async Task<IResult> DeleteExpenseByIdAsync(string id, ExpenseManager manager)
+    public static async Task<IResult> DeleteExpenseByIdAsync(string id, ExpenseManager manager,Guid userId)
     {
         if (Guid.TryParse(id, out var guid) == false)
         {
             return Results.BadRequest(new { message = "Invalid Guid Format" });
         }
-        var (Balance, expense) = await manager.DeleteExpenseAsync(guid);
+        var (Balance, expense) = await manager.DeleteExpenseAsync(guid,userId);
         if (expense == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
@@ -64,9 +64,9 @@ public class ExpenseController
         return Results.Ok(new { message = "Deleted Expense", Balance = Balance, DeleteExpense = ExpenseDto.ToDto(expense) });
     }
 
-    public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager)
+    public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager,Guid userId)
     {
-        var (credit, creditList) = await manager.CreditOnlyAsync();
+        var (credit, creditList) = await manager.CreditOnlyAsync(userId);
         List<ExpenseDto> creditDto = new List<ExpenseDto>();
         foreach (var exp in creditList)
         {
@@ -75,9 +75,9 @@ public class ExpenseController
         return Results.Ok(new { CreditAmount = credit, Credits = creditDto });
     }
 
-    public static async Task<IResult> DebitExpensesAsync(ExpenseManager manager)
+    public static async Task<IResult> DebitExpensesAsync(ExpenseManager manager,Guid userId)
     {
-        var (debit, debitList) = await manager.DebitOnlyAsync();
+        var (debit, debitList) = await manager.DebitOnlyAsync(userId);
         List<ExpenseDto> debitDto = new List<ExpenseDto>();
         foreach (var exp in debitList)
         {

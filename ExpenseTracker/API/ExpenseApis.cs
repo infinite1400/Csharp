@@ -4,10 +4,69 @@ using ExpenseTracker.Services;
 using ExpenseTracker.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 namespace ExpenseTracker.API;
 
 public static class ExpenseApis
 {
+    [Authorize]
+    public static async Task<IResult> DeleteExpenseMethod(HttpContext http, string id, ExpenseManager manager)
+    {
+        var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Results.Unauthorized();
+        }
+        Guid userId = Guid.Parse(userIdClaim.Value);
+        return await ExpenseController.DeleteExpenseByIdAsync(id, manager, userId);
+    }
+
+    [Authorize]
+    public static async Task<IResult> EditExpenseMethod(HttpContext http, string id, AddExpenseRequest request, ExpenseManager manager)
+    {
+        var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Results.Unauthorized();
+        }
+        Guid userId = Guid.Parse(userIdClaim.Value);
+        return await ExpenseController.EditExpenseByIdAsync(id, request, manager, userId);
+    }
+    [Authorize]
+    public static async Task<IResult> ExpenseByIdMethod(HttpContext http, string id, ExpenseManager manager)
+    {
+        var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Results.Unauthorized();
+        }
+        Guid userId = Guid.Parse(userIdClaim.Value);
+        return await ExpenseController.ExpenseById(id, manager, userId);
+    }
+    [Authorize]
+    public static async Task<IResult> DebitListMethod(HttpContext http, ExpenseManager manager)
+    {
+        var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Results.Unauthorized();
+        }
+        Guid userid = Guid.Parse(userIdClaim.Value);
+        return await ExpenseController.DebitExpensesAsync(manager, userid);
+    }
+
+    [Authorize]
+    public static async Task<IResult> CreditListMethod(HttpContext http, ExpenseManager manager)
+    {
+        var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            return Results.Unauthorized();
+        }
+        Guid userid = Guid.Parse(userIdClaim.Value);
+        return await ExpenseController.CreditExpensesAsync(manager, userid);
+    }
     public static void MapExpenseApis(this IEndpointRouteBuilder app)
     {
         app.MapPost("/Addexpense", [Authorize] async (HttpContext http, AddExpenseRequest request, ExpenseManager manager) =>
@@ -21,35 +80,26 @@ public static class ExpenseApis
             return await ExpenseController.AddExpenseMethodAsync(request, manager, userId);
         });
 
-        app.MapGet("/ListExpense", async (ExpenseManager manager) =>
+        app.MapGet("/ListExpense", [Authorize] async (HttpContext http, ExpenseManager manager) =>
         {
-            return await ExpenseController.ListExpenseMethodAsync(manager);
+            var userIdClaim = http.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Results.Unauthorized();
+            }
+            Guid userId = Guid.Parse(userIdClaim.Value);
+            return await ExpenseController.ListExpenseMethodAsync(manager, userId);
         });
 
-        app.MapGet("/expense/{id}", async (string id, ExpenseManager manager) =>
-        {
-            return await ExpenseController.ExpenseById(id, manager);
-        });
+        app.MapGet("/expense/{id}", ExpenseByIdMethod);
 
-        app.MapPut("/editexpense/{id}", (string id, AddExpenseRequest request, ExpenseManager manager) =>
-        {
-            return ExpenseController.EditExpenseByIdAsync(id, request, manager);
-        });
+        app.MapPut("/editexpense/{id}", EditExpenseMethod);
 
-        app.MapDelete("/deleteExpense/{id}", (string id, ExpenseManager manager) =>
-        {
-            return ExpenseController.DeleteExpenseByIdAsync(id, manager);
-        });
+        app.MapDelete("/deleteExpense/{id}", DeleteExpenseMethod);
 
-        app.MapGet("/Credits", (ExpenseManager manager) =>
-        {
-            return ExpenseController.CreditExpensesAsync(manager);
-        });
+        app.MapGet("/Credits", CreditListMethod);
 
-        app.MapGet("/Debits", (ExpenseManager manager) =>
-        {
-            return ExpenseController.DebitExpensesAsync(manager);
-        });
+        app.MapGet("/Debits", DebitListMethod);
 
         app.MapGet("/MonthlyExpense/month={month}/year={year}", (int month, int year, ExpenseManager manager) =>
         {

@@ -66,11 +66,19 @@ public class ExpenseManager
     //     }
     //     await _context.SaveChangesAsync();
     // }
-    public async Task<decimal> CalculateBalance()
+    public async Task<decimal> CalculateBalance(Guid userId)
     {
         decimal balance = 0;
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
-        foreach (Expense expense in Expenses)
+        List<Expense> userExpenses = new List<Expense>();
+        foreach (Expense exp in Expenses)
+        {
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        foreach (Expense expense in userExpenses)
         {
             if (expense.type == 'C')
             {
@@ -109,7 +117,7 @@ public class ExpenseManager
         }
         return expenseDtos;
     }
-    public async Task<(decimal, Expense)> AddExpenseAsync(AddExpenseRequest request,Guid userId)
+    public async Task<(decimal, Expense)> AddExpenseAsync(AddExpenseRequest request, Guid userId)
     {
         Expense exp = new Expense(
             request.Amount,
@@ -120,21 +128,37 @@ public class ExpenseManager
         );
         _context.Expenses.Add(exp);
         await _context.SaveChangesAsync();
-        decimal balance = await CalculateBalance();
+        decimal balance = await CalculateBalance(userId);
         return (balance, exp);
     }
-    public async Task<(decimal, List<Expense>)> ListExpensesAsync()
+    public async Task<(decimal, List<Expense>)> ListExpensesAsync(Guid userId)
     {
         List<Expense> expenses = await _context.Expenses.ToListAsync();
-        decimal balance = await CalculateBalance();
-        return (balance, expenses);
-    }
-    public async Task<Expense?> FindExpenseByIdAsync(Guid id)
-    {
-        List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> userExpenses = new List<Expense>();
         foreach (Expense exp in expenses)
         {
-            if (id == exp.id)
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        decimal balance = CalculateBalance(userExpenses);
+        return (balance, userExpenses);
+    }
+    public async Task<Expense?> FindExpenseByIdAsync(Guid id, Guid userId)
+    {
+        List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> userExpenses = new List<Expense>();
+        foreach (Expense exp in expenses)
+        {
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        foreach (Expense exp in userExpenses)
+        {
+            if (exp.id == id)
             {
                 return exp;
             }
@@ -142,35 +166,53 @@ public class ExpenseManager
         return null;
     }
 
-    public async Task<(decimal?, Expense?)> EditExpenseAsync(Guid id, decimal amount, string note, char type)
+    public async Task<(decimal?, Expense?)> EditExpenseAsync(Guid id, decimal amount, string note, char type, Guid userId)
     {
-        var expense = await _context.Expenses.FindAsync(id);
-        if (expense == null) return (null, null);
-        expense.amount = amount;
-        expense.note = note;
-        expense.type = type;
-        expense.date = DateTime.Now;
-        await _context.SaveChangesAsync();
-        decimal Balance = await CalculateBalance();
-        return (Balance, expense);
-    }
-    public async Task<(decimal?, Expense?)> DeleteExpenseAsync(Guid id)
-    {
-        var expense = await _context.Expenses.FindAsync(id);
-        if (expense == null) return (null, null);
-        _context.Expenses.Remove(expense);
-        await _context.SaveChangesAsync();
-        decimal Balance = await CalculateBalance();
-        return (Balance, expense);
-    }
-
-    public async Task<(decimal, List<Expense>)> CreditOnlyAsync()
-    {
-        List<Expense> CreditList = new List<Expense>();
         List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> userExpenses = new List<Expense>();
         foreach (Expense exp in expenses)
         {
-            if (exp.type == 'C')
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        foreach (Expense exp in userExpenses)
+        {
+            if (exp.id == id)
+            {
+                exp.amount = amount;
+                exp.date = DateTime.Now;
+                exp.note = note;
+                exp.type = type;
+                await _context.SaveChangesAsync();
+                decimal Balance = await CalculateBalance(userId);
+                return (Balance, exp);
+            }
+        }
+        return (null, null);
+    }
+    public async Task<(decimal?, Expense?)> DeleteExpenseAsync(Guid id, Guid userId)
+    {
+        var expense = await _context.Expenses.FindAsync(id);
+        if (expense == null) return (null, null);
+        if (expense.userId == userId)
+        {
+            _context.Expenses.Remove(expense);
+            await _context.SaveChangesAsync();
+            decimal Balance = await CalculateBalance(userId);
+            return (Balance, expense);
+        }
+        return (null, null);
+    }
+
+    public async Task<(decimal, List<Expense>)> CreditOnlyAsync(Guid userId)
+    {
+        List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> CreditList = new List<Expense>();
+        foreach (Expense exp in expenses)
+        {
+            if (exp.userId == userId && exp.type == 'C')
             {
                 CreditList.Add(exp);
             }
@@ -179,13 +221,13 @@ public class ExpenseManager
         return (creditAmount, CreditList);
     }
 
-    public async Task<(decimal, List<Expense>)> DebitOnlyAsync()
+    public async Task<(decimal, List<Expense>)> DebitOnlyAsync(Guid userId)
     {
-        List<Expense> DebitList = new List<Expense>();
         List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> DebitList = new List<Expense>();
         foreach (Expense exp in expenses)
         {
-            if (exp.type == 'D')
+            if (exp.userId == userId && exp.type == 'D')
             {
                 DebitList.Add(exp);
             }
