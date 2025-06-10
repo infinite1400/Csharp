@@ -8,6 +8,7 @@ using ExpenseTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.VisualBasic;
 namespace ExpenseTracker.Services;
 
 public class ExpenseManager
@@ -20,49 +21,64 @@ public class ExpenseManager
         _context = context;
     }
 
-    public decimal Balance = 0;
-    public async Task GenerateDataAsync()
+    public async Task DeleteAllExpense()
     {
-        var rand = new Random();
-        for (int i = 0; i < 100; i++)
-        {
-            int year = 2025;
-            int month = rand.Next(1, 7);
-            int day;
-            if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
-            {
-                day = rand.Next(1, 32);
-            }
-            else if (month == 2)
-            {
-                day = rand.Next(1, 29);
-            }
-            else
-            {
-                day = rand.Next(1, 31);
-            }
-            int hours = rand.Next(0, 24);
-            int minutes = rand.Next(0, 60);
-            int secs = rand.Next(0, 60);
-            DateTime date = new DateTime(year, month, day, hours, minutes, secs);
-            string note = $" Expense Number :- {i}";
-            decimal amount = rand.Next(100, 1000);
-            char type = i % 2 == 0 ? 'C' : 'D';
-            Expense exp = new Expense(
-                amount,
-                date,
-                note,
-                type
-            );
-            _context.Expenses.Add(exp);
-        }
+        var allexp = await _context.Expenses.ToListAsync();
+        _context.Expenses.RemoveRange(allexp);
         await _context.SaveChangesAsync();
     }
-    public async Task<decimal> CalculateBalance()
+
+    public decimal Balance = 0;
+    // public async Task GenerateDataAsync()
+    // {
+    //     var rand = new Random();
+    //     for (int i = 0; i < 10; i++)
+    //     {
+    //         int year = 2025;
+    //         int month = rand.Next(1, 7);
+    //         int day;
+    //         if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12)
+    //         {
+    //             day = rand.Next(1, 32);
+    //         }
+    //         else if (month == 2)
+    //         {
+    //             day = rand.Next(1, 29);
+    //         }
+    //         else
+    //         {
+    //             day = rand.Next(1, 31);
+    //         }
+    //         int hours = rand.Next(0, 24);
+    //         int minutes = rand.Next(0, 60);
+    //         int secs = rand.Next(0, 60);
+    //         DateTime date = new DateTime(year, month, day, hours, minutes, secs);
+    //         string note = $" Expense Number :- {i}";
+    //         decimal amount = rand.Next(100, 1000);
+    //         char type = i % 2 == 0 ? 'C' : 'D';
+    //         Expense exp = new Expense(
+    //             amount,
+    //             date,
+    //             note,
+    //             type
+    //         );
+    //         _context.Expenses.Add(exp);
+    //     }
+    //     await _context.SaveChangesAsync();
+    // }
+    public async Task<decimal> CalculateBalance(Guid userId)
     {
         decimal balance = 0;
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
-        foreach (Expense expense in Expenses)
+        List<Expense> userExpenses = new List<Expense>();
+        foreach (Expense exp in Expenses)
+        {
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        foreach (Expense expense in userExpenses)
         {
             if (expense.type == 'C')
             {
@@ -101,31 +117,48 @@ public class ExpenseManager
         }
         return expenseDtos;
     }
-    public async Task<(decimal, Expense)> AddExpenseAsync(decimal expenseAmount, string expenseNote, char expenseType)
+    public async Task<(decimal, Expense)> AddExpenseAsync(AddExpenseRequest request, Guid userId)
     {
         Expense exp = new Expense(
-            expenseAmount,
+            request.Amount,
             DateTime.Now,
-            expenseNote,
-            expenseType
+            request.Note,
+            request.Type,
+            userId
         );
         _context.Expenses.Add(exp);
         await _context.SaveChangesAsync();
-        decimal balance = await CalculateBalance();
+        decimal balance = await CalculateBalance(userId);
         return (balance, exp);
     }
-    public async Task<(decimal, List<Expense>)> ListExpensesAsync()
+    public async Task<(decimal, List<Expense>)> ListExpensesAsync(Guid userId)
     {
         List<Expense> expenses = await _context.Expenses.ToListAsync();
-        decimal balance = await CalculateBalance();
-        return (balance, expenses);
-    }
-    public async Task<Expense?> FindExpenseByIdAsync(Guid id)
-    {
-        List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> userExpenses = new List<Expense>();
         foreach (Expense exp in expenses)
         {
-            if (id == exp.id)
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        decimal balance = CalculateBalance(userExpenses);
+        return (balance, userExpenses);
+    }
+    public async Task<Expense?> FindExpenseByIdAsync(Guid id, Guid userId)
+    {
+        List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> userExpenses = new List<Expense>();
+        foreach (Expense exp in expenses)
+        {
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        foreach (Expense exp in userExpenses)
+        {
+            if (exp.id == id)
             {
                 return exp;
             }
@@ -133,35 +166,53 @@ public class ExpenseManager
         return null;
     }
 
-    public async Task<(decimal?, Expense?)> EditExpenseAsync(Guid id, decimal amount, string note, char type)
+    public async Task<(decimal?, Expense?)> EditExpenseAsync(Guid id, decimal amount, string note, char type, Guid userId)
     {
-        var expense = await _context.Expenses.FindAsync(id);
-        if (expense == null) return (null, null);
-        expense.amount = amount;
-        expense.note = note;
-        expense.type = type;
-        expense.date = DateTime.Now;
-        await _context.SaveChangesAsync();
-        decimal Balance = await CalculateBalance();
-        return (Balance, expense);
-    }
-    public async Task<(decimal?, Expense?)> DeleteExpenseAsync(Guid id)
-    {
-        var expense = await _context.Expenses.FindAsync(id);
-        if (expense == null) return (null, null);
-        _context.Expenses.Remove(expense);
-        await _context.SaveChangesAsync();
-        decimal Balance = await CalculateBalance();
-        return (Balance, expense);
-    }
-
-    public async Task<(decimal, List<Expense>)> CreditOnlyAsync()
-    {
-        List<Expense> CreditList = new List<Expense>();
         List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> userExpenses = new List<Expense>();
         foreach (Expense exp in expenses)
         {
-            if (exp.type == 'C')
+            if (exp.userId == userId)
+            {
+                userExpenses.Add(exp);
+            }
+        }
+        foreach (Expense exp in userExpenses)
+        {
+            if (exp.id == id)
+            {
+                exp.amount = amount;
+                exp.date = DateTime.Now;
+                exp.note = note;
+                exp.type = type;
+                await _context.SaveChangesAsync();
+                decimal Balance = await CalculateBalance(userId);
+                return (Balance, exp);
+            }
+        }
+        return (null, null);
+    }
+    public async Task<(decimal?, Expense?)> DeleteExpenseAsync(Guid id, Guid userId)
+    {
+        var expense = await _context.Expenses.FindAsync(id);
+        if (expense == null) return (null, null);
+        if (expense.userId == userId)
+        {
+            _context.Expenses.Remove(expense);
+            await _context.SaveChangesAsync();
+            decimal Balance = await CalculateBalance(userId);
+            return (Balance, expense);
+        }
+        return (null, null);
+    }
+
+    public async Task<(decimal, List<Expense>)> CreditOnlyAsync(Guid userId)
+    {
+        List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> CreditList = new List<Expense>();
+        foreach (Expense exp in expenses)
+        {
+            if (exp.userId == userId && exp.type == 'C')
             {
                 CreditList.Add(exp);
             }
@@ -170,13 +221,13 @@ public class ExpenseManager
         return (creditAmount, CreditList);
     }
 
-    public async Task<(decimal, List<Expense>)> DebitOnlyAsync()
+    public async Task<(decimal, List<Expense>)> DebitOnlyAsync(Guid userId)
     {
-        List<Expense> DebitList = new List<Expense>();
         List<Expense> expenses = await _context.Expenses.ToListAsync();
+        List<Expense> DebitList = new List<Expense>();
         foreach (Expense exp in expenses)
         {
-            if (exp.type == 'D')
+            if (exp.userId == userId && exp.type == 'D')
             {
                 DebitList.Add(exp);
             }
@@ -186,14 +237,14 @@ public class ExpenseManager
     }
 
 
-    public async Task<(decimal, List<ExpenseDto>?)> MonthExpenseAsync(int month, int year)
+    public async Task<(decimal, List<ExpenseDto>?)> MonthExpenseAsync(int month, int year, Guid userId)
     {
-        List<Expense> MonthlyExpenses = new List<Expense>();
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        List<Expense> MonthlyExpenses = new List<Expense>();
         foreach (var exp in Expenses)
         {
             DateTime date = exp.date;
-            if (date.Year == year && date.Month == month)
+            if (exp.userId == userId && date.Year == year && date.Month == month)
             {
                 MonthlyExpenses.Add(exp);
             }
@@ -203,14 +254,14 @@ public class ExpenseManager
         List<ExpenseDto> ExpensesDto = ConvertResponse(MonthlyExpenses);
         return (balance, ExpensesDto);
     }
-    public async Task<(decimal, List<ExpenseDto>?)> DateExpenseAsync(DateTime date)
+    public async Task<(decimal, List<ExpenseDto>?)> DateExpenseAsync(DateTime date, Guid userId)
     {
-        List<Expense> MonthlyExpenses = new List<Expense>();
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        List<Expense> MonthlyExpenses = new List<Expense>();
         foreach (var exp in Expenses)
         {
             DateTime Expdate = exp.date;
-            if (Expdate.Year == date.Year && Expdate.Month == date.Month && Expdate.Day == date.Day)
+            if (exp.userId == userId && Expdate.Year == date.Year && Expdate.Month == date.Month && Expdate.Day == date.Day)
             {
                 MonthlyExpenses.Add(exp);
             }
@@ -221,14 +272,14 @@ public class ExpenseManager
         return (balance, ExpensesDto);
     }
 
-    public async Task<(decimal, List<ExpenseDto>?)> ExpenseByRangeAsync(DateTime date1, DateTime date2)
+    public async Task<(decimal, List<ExpenseDto>?)> ExpenseByRangeAsync(DateTime date1, DateTime date2, Guid userId)
     {
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
         List<Expense> RangeExpense = new List<Expense>();
         foreach (var exp in Expenses)
         {
             DateTime date = exp.date;
-            if (date.Date >= date1.Date && date.Date <= date2.Date)
+            if (exp.userId == userId && date.Date >= date1.Date && date.Date <= date2.Date)
             {
                 RangeExpense.Add(exp);
             }

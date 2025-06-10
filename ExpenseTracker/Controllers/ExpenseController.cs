@@ -7,25 +7,25 @@ namespace ExpenseTracker.Controllers;
 
 public class ExpenseController
 {
-    public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager)
+    public static async Task<IResult> AddExpenseMethodAsync(AddExpenseRequest request, ExpenseManager manager, Guid userId)
     {
-        var (Balance, expense) = await manager.AddExpenseAsync(request.Amount, request.Note, request.Type);
+        var (Balance, expense) = await manager.AddExpenseAsync(request, userId);
         return Results.Ok(new { message = "Expense added", Balance = Balance, Expense = expense });
     }
 
-    public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager)
+    public static async Task<IResult> ListExpenseMethodAsync(ExpenseManager manager, Guid userId)
     {
-        var (balance, expenses) = await manager.ListExpensesAsync();
+        var (balance, expenses) = await manager.ListExpensesAsync(userId);
         return Results.Ok(new { balance = balance, Expenses = expenses });
     }
 
-    public static async Task<IResult> ExpenseById(string id, ExpenseManager manager)
+    public static async Task<IResult> ExpenseById(string id, ExpenseManager manager, Guid userId)
     {
         if (Guid.TryParse(id, out var guid) == false)
         {
-            return Results.BadRequest(new { message = "Invalid Guid Format" });
+            return Results.BadRequest(new { message = "Invalid Expense Guid Format" });
         }
-        var exp = await manager.FindExpenseByIdAsync(guid);
+        var exp = await manager.FindExpenseByIdAsync(guid, userId);
         if (exp == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
@@ -36,13 +36,13 @@ public class ExpenseController
         }
     }
 
-    public static async Task<IResult> EditExpenseByIdAsync(string id, AddExpenseRequest request, ExpenseManager manager)
+    public static async Task<IResult> EditExpenseByIdAsync(string id, AddExpenseRequest request, ExpenseManager manager, Guid userId)
     {
         if (Guid.TryParse(id, out var guid) == false)
         {
             return Results.BadRequest(new { message = "Invalid Guid Format" });
         }
-        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type);
+        var (Balance, editExpense) = await manager.EditExpenseAsync(guid, request.Amount, request.Note, request.Type, userId);
         if (editExpense == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
@@ -50,13 +50,13 @@ public class ExpenseController
         return Results.Ok(new { message = "Updated Expense", editExpense = ExpenseDto.ToDto(editExpense), Balance = Balance });
     }
 
-    public static async Task<IResult> DeleteExpenseByIdAsync(string id, ExpenseManager manager)
+    public static async Task<IResult> DeleteExpenseByIdAsync(string id, ExpenseManager manager, Guid userId)
     {
         if (Guid.TryParse(id, out var guid) == false)
         {
             return Results.BadRequest(new { message = "Invalid Guid Format" });
         }
-        var (Balance, expense) = await manager.DeleteExpenseAsync(guid);
+        var (Balance, expense) = await manager.DeleteExpenseAsync(guid, userId);
         if (expense == null)
         {
             return Results.NotFound(new { message = "No Expense by this id" });
@@ -64,9 +64,9 @@ public class ExpenseController
         return Results.Ok(new { message = "Deleted Expense", Balance = Balance, DeleteExpense = ExpenseDto.ToDto(expense) });
     }
 
-    public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager)
+    public static async Task<IResult> CreditExpensesAsync(ExpenseManager manager, Guid userId)
     {
-        var (credit, creditList) = await manager.CreditOnlyAsync();
+        var (credit, creditList) = await manager.CreditOnlyAsync(userId);
         List<ExpenseDto> creditDto = new List<ExpenseDto>();
         foreach (var exp in creditList)
         {
@@ -75,9 +75,9 @@ public class ExpenseController
         return Results.Ok(new { CreditAmount = credit, Credits = creditDto });
     }
 
-    public static async Task<IResult> DebitExpensesAsync(ExpenseManager manager)
+    public static async Task<IResult> DebitExpensesAsync(ExpenseManager manager, Guid userId)
     {
-        var (debit, debitList) = await manager.DebitOnlyAsync();
+        var (debit, debitList) = await manager.DebitOnlyAsync(userId);
         List<ExpenseDto> debitDto = new List<ExpenseDto>();
         foreach (var exp in debitList)
         {
@@ -86,9 +86,9 @@ public class ExpenseController
         return Results.Ok(new { deditAmount = debit, Debits = debitDto });
     }
 
-    public static async Task<IResult> ListExpenseByMonthAsync(int month, int year, ExpenseManager manager)
+    public static async Task<IResult> ListExpenseByMonthAsync(int month, int year, ExpenseManager manager, Guid userId)
     {
-        var (balance, MonthlyExpense) = await manager.MonthExpenseAsync(month, year);
+        var (balance, MonthlyExpense) = await manager.MonthExpenseAsync(month, year, userId);
         if (!(month >= 1 && month <= 12))
         {
             return Results.BadRequest(new { message = "Enter Valid Month from 1(January) to 12(December)" });
@@ -103,13 +103,13 @@ public class ExpenseController
         }
         return Results.Ok(new { MonthyBalance = balance, MonthlyExpense = MonthlyExpense });
     }
-    public static async Task<IResult> ListExpenseByDateAsync(string date, ExpenseManager manager)
+    public static async Task<IResult> ListExpenseByDateAsync(string date, ExpenseManager manager, Guid userId)
     {
         if (!DateTime.TryParse(date, out var parsedDate))
         {
             return Results.BadRequest(new { message = "Enter date correctly in format YYYY-MM-DD" });
         }
-        var (balance, DateExpense) = await manager.DateExpenseAsync(parsedDate);
+        var (balance, DateExpense) = await manager.DateExpenseAsync(parsedDate, userId);
         if (DateExpense == null)
         {
             return Results.NotFound(new { message = $"No Expenses for Month = {parsedDate.Month} & Year = {parsedDate.Year}" });
@@ -117,7 +117,7 @@ public class ExpenseController
         return Results.Ok(new { MonthyBalance = balance, DateExpense = DateExpense });
     }
 
-    public static async Task<IResult> ListExpenseByRangeAsync(string date1, string date2, ExpenseManager manager)
+    public static async Task<IResult> ListExpenseByRangeAsync(string date1, string date2, ExpenseManager manager,Guid userId)
     {
         // validating date1
         if (!DateTime.TryParse(date1, out var parsedDate1))
@@ -129,7 +129,7 @@ public class ExpenseController
         {
             return Results.BadRequest(new { message = "Enter date2 correctly in format YYYY-MM-DD" });
         }
-        var (balance, RangeExpenses) = await manager.ExpenseByRangeAsync(parsedDate1, parsedDate2);
+        var (balance, RangeExpenses) = await manager.ExpenseByRangeAsync(parsedDate1, parsedDate2,userId);
         if (RangeExpenses == null)
         {
             return Results.NotFound(new { message = "No expenses in this Date Range" });

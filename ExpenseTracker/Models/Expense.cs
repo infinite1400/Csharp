@@ -8,13 +8,15 @@ public class Expense
     public string note { get; set; } = string.Empty;
     public char type { get; set; }
     public DateTime date { get; set; } = DateTime.Now;
-    public Expense(decimal amount, DateTime date, string note, char type)
+    public Guid userId { get; set; }
+    public Expense(decimal amount, DateTime date, string note, char type, Guid userId)
     {
         this.id = Guid.NewGuid();
         this.amount = amount;
         this.note = note;
         this.type = type;
         this.date = date;
+        this.userId = userId;
     }
 }
 
