@@ -237,14 +237,14 @@ public class ExpenseManager
     }
 
 
-    public async Task<(decimal, List<ExpenseDto>?)> MonthExpenseAsync(int month, int year)
+    public async Task<(decimal, List<ExpenseDto>?)> MonthExpenseAsync(int month, int year, Guid userId)
     {
-        List<Expense> MonthlyExpenses = new List<Expense>();
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        List<Expense> MonthlyExpenses = new List<Expense>();
         foreach (var exp in Expenses)
         {
             DateTime date = exp.date;
-            if (date.Year == year && date.Month == month)
+            if (exp.userId == userId && date.Year == year && date.Month == month)
             {
                 MonthlyExpenses.Add(exp);
             }
@@ -254,14 +254,14 @@ public class ExpenseManager
         List<ExpenseDto> ExpensesDto = ConvertResponse(MonthlyExpenses);
         return (balance, ExpensesDto);
     }
-    public async Task<(decimal, List<ExpenseDto>?)> DateExpenseAsync(DateTime date)
+    public async Task<(decimal, List<ExpenseDto>?)> DateExpenseAsync(DateTime date, Guid userId)
     {
-        List<Expense> MonthlyExpenses = new List<Expense>();
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
+        List<Expense> MonthlyExpenses = new List<Expense>();
         foreach (var exp in Expenses)
         {
             DateTime Expdate = exp.date;
-            if (Expdate.Year == date.Year && Expdate.Month == date.Month && Expdate.Day == date.Day)
+            if (exp.userId == userId && Expdate.Year == date.Year && Expdate.Month == date.Month && Expdate.Day == date.Day)
             {
                 MonthlyExpenses.Add(exp);
             }
@@ -272,14 +272,14 @@ public class ExpenseManager
         return (balance, ExpensesDto);
     }
 
-    public async Task<(decimal, List<ExpenseDto>?)> ExpenseByRangeAsync(DateTime date1, DateTime date2)
+    public async Task<(decimal, List<ExpenseDto>?)> ExpenseByRangeAsync(DateTime date1, DateTime date2, Guid userId)
     {
         List<Expense> Expenses = await _context.Expenses.ToListAsync();
         List<Expense> RangeExpense = new List<Expense>();
         foreach (var exp in Expenses)
         {
             DateTime date = exp.date;
-            if (date.Date >= date1.Date && date.Date <= date2.Date)
+            if (exp.userId == userId && date.Date >= date1.Date && date.Date <= date2.Date)
             {
                 RangeExpense.Add(exp);
             }
